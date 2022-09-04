@@ -16,6 +16,7 @@ const {
 const walletController = require('./controllers/walletController');
 const authorizationController = require('./controllers/authorizationController');
 const settingController = require('./controllers/settingController');
+const MainController = require('./controllers/MainController');
 
 const router = require('express').Router();
 const path = require('path');
@@ -23,6 +24,17 @@ const path = require('path');
 router.post('/authenticate', authenticate);
 router.post('/register', validateRegister, register);
 router.post('/change-password', requireAuth, changePassword);
+//Main
+router.post('/test', [], MainController.test);
+router.post('/appuser/get', [], MainController.appuser_get);
+router.post('/appuser/upsert', [], MainController.appuser_upsert);
+router.post('/appuser/delete', [], MainController.appuser_delete);
+router.post('/project/get', [], MainController.project_get);
+router.post('/project/upsert', [], MainController.project_upsert);
+router.post('/project/delete', [], MainController.project_delete);
+router.post('/pledge/get', [], MainController.pledge_get);
+router.post('/pledge/upsert', [], MainController.pledge_upsert);
+router.post('/pledge/delete', [], MainController.pledge_delete);
 
 //wallets
 router.post('/wallet/read', [requireAdmin], walletController.read);
