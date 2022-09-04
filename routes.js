@@ -35,6 +35,7 @@ router.post('/project/delete', [], MainController.project_delete);
 router.post('/pledge/get', [], MainController.pledge_get);
 router.post('/pledge/upsert', [], MainController.pledge_upsert);
 router.post('/pledge/delete', [], MainController.pledge_delete);
+router.post('/dashboard/index', [], MainController.dashboard_index);
 
 //wallets
 router.post('/wallet/read', [requireAdmin], walletController.read);

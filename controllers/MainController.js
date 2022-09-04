@@ -127,3 +127,19 @@ exports.pledge_delete = async (req, res) => {
     return res.json({ result: false, data: err.message });
   }
 };
+
+//Dashbaord
+exports.dashboard_index = async (req, res) => {
+  try {
+    return res.json({
+      result: true,
+      data: {
+        projects: 1,
+        pledges: 12,
+        total_fund_raised: 12000
+      }
+    });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
