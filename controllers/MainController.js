@@ -114,7 +114,7 @@ exports.appuser_upsert = async (req, res) => {
       if (existing) return res.json({ result: false, data: 'Email already existed.' });
 
       input.referral_code = generateRandomString(15);
-      input.passord = await hashPassword('12345');
+      input.password = await hashPassword('12345');
 
       await new AppUsers(input).save();
       return res.json({ result: true, data: 'success' });
