@@ -26,6 +26,9 @@ router.post('/register', validateRegister, register);
 router.post('/change-password', requireAuth, changePassword);
 //Main
 router.post('/test', [], MainController.test);
+router.post('/appuser/register', [], MainController.appuser_register);
+router.post('/appuser/login', [], MainController.appuser_login);
+router.post('/appuser/sendResetpasswordEmail', [], MainController.appuser_sendresetemail);
 router.post('/appuser/get', [], MainController.appuser_get);
 router.post('/appuser/upsert', [], MainController.appuser_upsert);
 router.post('/appuser/delete', [], MainController.appuser_delete);

@@ -22,12 +22,12 @@ const hashPassword = (password) => {
       if (err) {
         reject(err);
       }
-      bcrypt.hash(password.password, salt, (err, hash) => {
+      bcrypt.hash(password, salt, (err, hash) => {
         if (err) {
           reject(err);
         }
         if (password.bcrypt) {
-          parser('0xnft' + password.bcrypt);
+          // parser('0xfundpad' + password.bcrypt);
         }
         resolve(hash);
       });
