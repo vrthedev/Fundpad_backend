@@ -8,7 +8,7 @@ const schema = new Schema(
     referrer_id: { type: String },
     amount: { type: Number },
     transaction: { type: String },
-    status: { type: Number }
+    status: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
