@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const setting = new Schema({
   key: { type: String },
   value: { type:  Schema.Types.Mixed}
-});
+},
+{ timestamps: true });
 
 setting.set('toJSON', { getters: true });
 setting.options.toJSON.transform = (doc, ret) => {

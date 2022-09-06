@@ -3,7 +3,12 @@ const Pledges = require('../models/pledges');
 const Profits = require('../models/profits');
 const Payouts = require('../models/payouts');
 const AppUsers = require('../models/app_users');
+const News = require('../models/news');
+const Faqs = require('../models/faqs');
 const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
+
+const investor_payout_percentage = 50;
+const referral_payout_percentage = 10;
 
 exports.test = async (req, res) => {
   return res.json({ result: true, data: 'API running' });
@@ -86,6 +91,17 @@ exports.appuser_sendresetemail = async (req, res) => {
   try {
     var { email } = req.body;
     return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.appuser_info = async (req, res) => {
+  try {
+    var { app_user_id } = req.body;
+    console.log(app_user_id);
+    var app_user = await AppUsers.findOne({ _id: app_user_id });
+    return res.json({ result: true, data: app_user });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
@@ -187,7 +203,7 @@ exports.pledge_get = async (req, res) => {
 exports.pledge_upsert = async (req, res) => {
   try {
     var input = req.body;
-    var { investor_id } = req.body;
+    var { investor_id, status, amount } = req.body;
     var investor = await AppUsers.findOne({ _id: investor_id });
     input.referrer_id = investor.referrer_id;
 
@@ -199,6 +215,7 @@ exports.pledge_upsert = async (req, res) => {
     } else {
       //add
       await new Pledges(input).save();
+
       return res.json({ result: true, data: 'success' });
     }
   } catch (err) {
@@ -211,6 +228,223 @@ exports.pledge_delete = async (req, res) => {
     var { _id } = req.body;
     await Pledges.findOneAndDelete({ _id: _id });
     return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+// Profits
+exports.profit_get = async (req, res) => {
+  try {
+    var data = await Profits.find();
+    return res.json({ result: true, data: data });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.profit_add = async (req, res) => {
+  try {
+    var { name, percentage } = req.body;
+    var profit_item = await new Profits({ name, percentage }).save();
+
+    await createPayouts(profit_item._id, percentage);
+
+    return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.profit_delete = async (req, res) => {
+  try {
+    var { _id } = req.body;
+    await Profits.findOneAndDelete({ _id: _id });
+    await Payouts.deleteMany({ profit_id: _id });
+    return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+const createPayouts = async (profit_id, profit_percentage) => {
+  /*
+  [
+    { _id: '631562089f4d371ac058c78e', total_amount: 500 },
+    { _id: '6314de2e3509e4418c2ff06c', total_amount: 2000 }
+  ]
+  */
+  var investors = await Pledges.aggregate([
+    {
+      $group: {
+        _id: '$investor_id',
+        total_amount: { $sum: { $cond: [{ $eq: ['$status', 1] }, '$amount', 0] } } //sum of amount for status = 1
+      }
+    }
+  ]);
+  console.log('investors', investors);
+  investors.map(async (item) => {
+    var final_percentage = (profit_percentage * investor_payout_percentage) / 100;
+    await new Payouts({
+      profit_id: profit_id,
+      app_user_id: item._id,
+      type: 1,
+      percentage: final_percentage,
+      amount: (item.total_amount * final_percentage) / 100
+    }).save();
+  });
+
+  var referrals = await Pledges.aggregate([
+    {
+      $group: {
+        _id: '$referrer_id',
+        total_amount: { $sum: { $cond: [{ $eq: ['$status', 1] }, '$amount', 0] } } //sum of amount for status = 1
+      }
+    }
+  ]);
+  console.log('referrals', referrals);
+  referrals.map(async (item) => {
+    var final_percentage = (profit_percentage * referral_payout_percentage) / 100;
+    await new Payouts({
+      profit_id: profit_id,
+      app_user_id: item._id,
+      type: 2,
+      percentage: final_percentage,
+      amount: (item.total_amount * final_percentage) / 100
+    }).save();
+  });
+
+  return;
+};
+
+// News
+exports.news_get = async (req, res) => {
+  try {
+    var data = await News.find();
+    return res.json({ result: true, data: data });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.news_upsert = async (req, res) => {
+  try {
+    var input = req.body;
+    var { _id } = req.body;
+    if (_id) {
+      //update
+      await News.updateOne({ _id }, input, { upsert: true });
+      return res.json({ result: true, data: 'success' });
+    } else {
+      //add
+      await new News(input).save();
+      return res.json({ result: true, data: 'success' });
+    }
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.news_delete = async (req, res) => {
+  try {
+    var { _id } = req.body;
+    await News.findOneAndDelete({ _id: _id });
+    return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+// Faq
+exports.faq_get = async (req, res) => {
+  try {
+    var data = await Faqs.find();
+    return res.json({ result: true, data: data });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.faq_upsert = async (req, res) => {
+  try {
+    var input = req.body;
+    var { _id } = req.body;
+    if (_id) {
+      //update
+      await Faqs.updateOne({ _id }, input, { upsert: true });
+      return res.json({ result: true, data: 'success' });
+    } else {
+      //add
+      await new Faqs(input).save();
+      return res.json({ result: true, data: 'success' });
+    }
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.faq_delete = async (req, res) => {
+  try {
+    var { _id } = req.body;
+    await Faqs.findOneAndDelete({ _id: _id });
+    return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+//Account
+exports.account_info = async (req, res) => {
+  try {
+    var { app_user_id } = req.body;
+    //pledges
+    var pledges = await Pledges.find({ investor_id: app_user_id });
+    var ddd = await Pledges.aggregate([
+      { $match: { investor_id: app_user_id } },
+      {
+        $group: {
+          _id: '$investor_id',
+          pledges_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    var pledges_sum = ddd[0].pledges_sum;
+    //investor_payouts
+    var investor_payouts = await Payouts.find({ app_user_id: app_user_id, type: 1 });
+    var ddd = await Payouts.aggregate([
+      { $match: { app_user_id: app_user_id, type: 1 } },
+      {
+        $group: {
+          _id: '$app_user_id',
+          investor_payout_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    var investor_payout_sum = ddd[0].investor_payout_sum;
+    //referral_payouts
+    var referral_payouts = await Payouts.find({ app_user_id: app_user_id, type: 2 });
+    var ddd = await Payouts.aggregate([
+      { $match: { app_user_id: app_user_id, type: 2 } },
+      {
+        $group: {
+          _id: '$app_user_id',
+          referral_payout_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    var referral_payout_sum = ddd[0].referral_payout_sum;
+
+    return res.json({
+      result: true,
+      data: {
+        pledges_sum: pledges_sum,
+        pledges: pledges,
+        investor_payout_sum: investor_payout_sum,
+        investor_payouts: investor_payouts,
+        referral_payout_sum: referral_payout_sum,
+        referral_payouts: referral_payouts
+      }
+    });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }

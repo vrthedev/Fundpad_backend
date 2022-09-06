@@ -3,12 +3,8 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema(
   {
-    investor_id: { type: String },
-    referrer_id: { type: String },
-    referrer_id: { type: String },
-    amount: { type: Number },
-    transaction: { type: String },
-    status: { type: Number }
+    title: { type: String },
+    content: { type: String }
   },
   { timestamps: true }
 );
@@ -19,4 +15,4 @@ schema.options.toJSON.transform = (doc, ret) => {
   delete obj.__v;
   return obj;
 };
-module.exports = mongoose.model('pledges', schema);
+module.exports = mongoose.model('faqs', schema);

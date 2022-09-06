@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const authorization = new Schema({
-  address: { type: String },
-  amount: { type: Number }
-});
+const authorization = new Schema(
+  {
+    address: { type: String },
+    amount: { type: Number }
+  },
+  { timestamps: true }
+);
 
 authorization.set('toJSON', { getters: true });
 authorization.options.toJSON.transform = (doc, ret) => {

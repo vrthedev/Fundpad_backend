@@ -26,18 +26,38 @@ router.post('/register', validateRegister, register);
 router.post('/change-password', requireAuth, changePassword);
 //Main
 router.post('/test', [], MainController.test);
+
 router.post('/appuser/register', [], MainController.appuser_register);
 router.post('/appuser/login', [], MainController.appuser_login);
 router.post('/appuser/sendResetpasswordEmail', [], MainController.appuser_sendresetemail);
+
+router.post('/appuser/info', [], MainController.appuser_info);
 router.post('/appuser/get', [], MainController.appuser_get);
 router.post('/appuser/upsert', [], MainController.appuser_upsert);
 router.post('/appuser/delete', [], MainController.appuser_delete);
+
 router.post('/project/get', [], MainController.project_get);
 router.post('/project/upsert', [], MainController.project_upsert);
 router.post('/project/delete', [], MainController.project_delete);
+
 router.post('/pledge/get', [], MainController.pledge_get);
 router.post('/pledge/upsert', [], MainController.pledge_upsert);
 router.post('/pledge/delete', [], MainController.pledge_delete);
+
+router.post('/profit/get', [], MainController.profit_get);
+router.post('/profit/add', [], MainController.profit_add);
+router.post('/profit/delete', [], MainController.profit_delete);
+
+router.post('/news/get', [], MainController.news_get);
+router.post('/news/upsert', [], MainController.news_upsert);
+router.post('/news/delete', [], MainController.news_delete);
+
+router.post('/faq/get', [], MainController.faq_get);
+router.post('/faq/upsert', [], MainController.faq_upsert);
+router.post('/faq/delete', [], MainController.faq_delete);
+
+router.post('/account/info', [], MainController.account_info);
+
 router.post('/dashboard/index', [], MainController.dashboard_index);
 
 //wallets
