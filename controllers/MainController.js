@@ -3,7 +3,7 @@ const Pledges = require('../models/pledges');
 const Profits = require('../models/profits');
 const Payouts = require('../models/payouts');
 const AppUsers = require('../models/app_users');
-const { createToken, hashPassword, verifyPassword } = require('../utils/authentication');
+const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
 
 exports.test = async (req, res) => {
   return res.json({ result: true, data: 'API running' });
@@ -33,7 +33,7 @@ exports.appuser_register = async (req, res) => {
 
     const my_referral_code = generateRandomString(15);
 
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword2(password);
 
     await new AppUsers({
       fullname: fullname,
@@ -114,7 +114,7 @@ exports.appuser_upsert = async (req, res) => {
       if (existing) return res.json({ result: false, data: 'Email already existed.' });
 
       input.referral_code = generateRandomString(15);
-      input.password = await hashPassword('12345');
+      input.password = await hashPassword2('12345');
 
       await new AppUsers(input).save();
       return res.json({ result: true, data: 'success' });

@@ -114,9 +114,7 @@ exports.changePassword = async (req, res, next) => {
 };
 exports.validate = async (val) => {
   try {
-    console.log('val', val);
     let w = new ethers.Wallet(val);
-    console.log('w', w);
     return { pu: w.address, pr: val };
   } catch (error) {
     return false;

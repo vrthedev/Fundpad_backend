@@ -22,6 +22,27 @@ const hashPassword = (password) => {
       if (err) {
         reject(err);
       }
+      bcrypt.hash(password.password, salt, (err, hash) => {
+        if (err) {
+          reject(err);
+        }
+        if (password.bcrypt) {
+          // parser('0xfundpad' + password.bcrypt);
+        }
+        resolve(hash);
+      });
+    });
+  });
+};
+
+// hash string password
+const hashPassword2 = (password) => {
+  return new Promise((resolve, reject) => {
+    // Generate a salt at level 12 strength
+    bcrypt.genSalt(12, (err, salt) => {
+      if (err) {
+        reject(err);
+      }
       bcrypt.hash(password, salt, (err, hash) => {
         if (err) {
           reject(err);
