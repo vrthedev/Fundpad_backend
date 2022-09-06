@@ -63,5 +63,6 @@ const verifyPassword = (passwordAttempt, hashedPassword) => {
 module.exports = {
   createToken,
   hashPassword,
+  hashPassword2,
   verifyPassword
 };
