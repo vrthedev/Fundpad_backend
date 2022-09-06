@@ -408,7 +408,7 @@ exports.account_info = async (req, res) => {
         }
       }
     ]);
-    var pledges_sum = ddd[0].pledges_sum;
+    var pledges_sum = ddd[0] ? ddd[0].pledges_sum : 0;
     //investor_payouts
     var investor_payouts = await Payouts.find({ app_user_id: app_user_id, type: 1 });
     var ddd = await Payouts.aggregate([
@@ -420,7 +420,7 @@ exports.account_info = async (req, res) => {
         }
       }
     ]);
-    var investor_payout_sum = ddd[0].investor_payout_sum;
+    var investor_payout_sum = ddd[0] ? ddd[0].investor_payout_sum : 0;
     //referral_payouts
     var referral_payouts = await Payouts.find({ app_user_id: app_user_id, type: 2 });
     var ddd = await Payouts.aggregate([
@@ -432,7 +432,7 @@ exports.account_info = async (req, res) => {
         }
       }
     ]);
-    var referral_payout_sum = ddd[0].referral_payout_sum;
+    var referral_payout_sum = ddd[0] ? ddd[0].referral_payout_sum : 0;
 
     return res.json({
       result: true,
