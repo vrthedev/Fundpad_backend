@@ -400,7 +400,7 @@ exports.account_info = async (req, res) => {
     //pledges
     var pledges = await Pledges.find({ investor_id: app_user_id });
     var ddd = await Pledges.aggregate([
-      { $match: { investor_id: app_user_id } },
+      { $match: { investor_id: app_user_id, status: 1 } },
       {
         $group: {
           _id: '$investor_id',
