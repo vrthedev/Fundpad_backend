@@ -25,14 +25,14 @@ exports.appuser_register = async (req, res) => {
       phone, //optional
       wallet, //optional
       address, //optional
-      referral_code, // check referral_code
+      register_referral_code, // check referral_code
       password
     } = req.body;
 
     var existing = await AppUsers.findOne({ email: email });
     if (existing) return res.json({ result: false, data: 'Email already existed.' });
 
-    var referrer = await AppUsers.findOne({ referral_code: referral_code });
+    var referrer = await AppUsers.findOne({ referral_code: register_referral_code });
     if (!referrer) return res.json({ result: false, data: 'Referral Code is not correct.' });
     const referrer_id = referrer._id;
 
