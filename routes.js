@@ -34,6 +34,7 @@ router.post('/appuser/sendResetpasswordEmail', [], MainController.appuser_sendre
 router.post('/appuser/info', [], MainController.appuser_info);
 router.post('/appuser/get', [], MainController.appuser_get);
 router.post('/appuser/upsert', [], MainController.appuser_upsert);
+router.post('/appuser/changePassword', [], MainController.appuser_changePassword);
 router.post('/appuser/delete', [], MainController.appuser_delete);
 
 router.post('/project/get', [], MainController.project_get);
@@ -45,6 +46,7 @@ router.post('/pledge/upsert', [], MainController.pledge_upsert);
 router.post('/pledge/delete', [], MainController.pledge_delete);
 
 router.post('/profit/get', [], MainController.profit_get);
+router.post('/profit/info', [], MainController.profit_info);
 router.post('/profit/add', [], MainController.profit_add);
 router.post('/profit/delete', [], MainController.profit_delete);
 
@@ -57,6 +59,7 @@ router.post('/faq/upsert', [], MainController.faq_upsert);
 router.post('/faq/delete', [], MainController.faq_delete);
 
 router.post('/account/info', [], MainController.account_info);
+router.post('/account/referees', [], MainController.account_referees);
 
 router.post('/dashboard/index', [], MainController.dashboard_index);
 

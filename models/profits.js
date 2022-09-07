@@ -5,7 +5,8 @@ const schema = new Schema(
   {
     name: { type: String },
     percentage: { type: Number },
-    isActive: { type: Boolean }
+    investor_payouts: { type: Number },
+    referral_payouts: { type: Number },
   },
   { timestamps: true }
 );

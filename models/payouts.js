@@ -11,6 +11,7 @@ const schema = new Schema(
     app_user_id: { type: String },
     type: { type: Number },
     percentage: { type: Number },
+    base_amount: { type: Number },
     amount: { type: Number }
   },
   { timestamps: true }

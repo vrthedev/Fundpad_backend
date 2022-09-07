@@ -6,7 +6,7 @@ const schema = new Schema(
     name: { type: String },
     deposit_address: { type: String },
     fund_target: { type: Number },
-    fund_raised: { type: Number },
+    fund_raised: { type: Number, default: 0 },
     isActive: { type: Boolean },
     endDate: { type: Date }
   },

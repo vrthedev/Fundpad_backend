@@ -74,9 +74,11 @@ exports.appuser_login = async (req, res) => {
     var { email, password, device_token } = req.body;
     var user = await AppUsers.findOne({ email: email });
     if (user) {
-      //~~check password
+      var checkpassword = await verifyPassword(password, user.password);
+      if (!checkpassword)
+        return res.json({ result: false, data: 'Email and Password is not corret.' });
+
       user.device_token = device_token;
-      console.log(user);
       await user.save();
       return res.json({ result: true, data: user });
     } else {
@@ -90,7 +92,25 @@ exports.appuser_login = async (req, res) => {
 exports.appuser_sendresetemail = async (req, res) => {
   try {
     var { email } = req.body;
+    //send reset password email
     return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.appuser_changePassword = async (req, res) => {
+  try {
+    var { email, new_password } = req.body;
+    var user = await AppUsers.findOne({ email: email });
+    if (user) {
+      const hashedPassword = await hashPassword2(new_password);
+      user.password = hashedPassword;
+      await user.save();
+      return res.json({ result: true, data: 'success' });
+    } else {
+      return res.json({ result: true, data: 'Email is not correct.' });
+    }
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
@@ -153,8 +173,16 @@ exports.appuser_delete = async (req, res) => {
 // Projects
 exports.project_get = async (req, res) => {
   try {
-    var data = await Projects.find();
-    return res.json({ result: true, data: data });
+    var project = await Projects.findOne();
+    var ddd = await Pledges.aggregate([
+      { $match: { status: 1 } },
+      {
+        $group: { _id: null, total_amount: { $sum: '$amount' } }
+      }
+    ]);
+    project.fund_raised = ddd[0] ? ddd[0].total_amount : 0;
+
+    return res.json({ result: true, data: project });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
@@ -203,7 +231,7 @@ exports.pledge_get = async (req, res) => {
 exports.pledge_upsert = async (req, res) => {
   try {
     var input = req.body;
-    var { investor_id, status, amount } = req.body;
+    var { investor_id, wallet } = req.body;
     var investor = await AppUsers.findOne({ _id: investor_id });
     input.referrer_id = investor.referrer_id;
 
@@ -215,6 +243,10 @@ exports.pledge_upsert = async (req, res) => {
     } else {
       //add
       await new Pledges(input).save();
+
+      //update user wallet
+      investor.wallet = wallet;
+      await investor.save();
 
       return res.json({ result: true, data: 'success' });
     }
@@ -238,6 +270,24 @@ exports.profit_get = async (req, res) => {
   try {
     var data = await Profits.find();
     return res.json({ result: true, data: data });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.profit_info = async (req, res) => {
+  try {
+    var { profit_id } = req.body;
+
+    var investor_payouts = await Payouts.find({ profit_id, type: 1 });
+    var referral_payouts = await Payouts.find({ profit_id, type: 2 });
+    return res.json({
+      result: true,
+      data: {
+        investor_payouts: investor_payouts,
+        referral_payouts: referral_payouts
+      }
+    });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
@@ -268,7 +318,8 @@ exports.profit_delete = async (req, res) => {
 };
 
 const createPayouts = async (profit_id, profit_percentage) => {
-  /*
+  //Investor payouts
+  /* total pledges of investors
   [
     { _id: '631562089f4d371ac058c78e', total_amount: 500 },
     { _id: '6314de2e3509e4418c2ff06c', total_amount: 2000 }
@@ -282,18 +333,29 @@ const createPayouts = async (profit_id, profit_percentage) => {
       }
     }
   ]);
-  console.log('investors', investors);
+  var investor_payouts = 0;
   investors.map(async (item) => {
     var final_percentage = (profit_percentage * investor_payout_percentage) / 100;
+    var base_amount = item.total_amount;
+    var amount = (base_amount * final_percentage) / 100;
+    investor_payouts += amount;
     await new Payouts({
       profit_id: profit_id,
       app_user_id: item._id,
       type: 1,
+      base_amount,
       percentage: final_percentage,
-      amount: (item.total_amount * final_percentage) / 100
+      amount
     }).save();
   });
 
+  //Referral payouts
+  /* total pledges from user's referres
+  [
+    { _id: '631562089f4d371ac058c78e', total_amount: 500 },
+    { _id: '6314de2e3509e4418c2ff06c', total_amount: 2000 }
+  ]
+  */
   var referrals = await Pledges.aggregate([
     {
       $group: {
@@ -302,17 +364,28 @@ const createPayouts = async (profit_id, profit_percentage) => {
       }
     }
   ]);
-  console.log('referrals', referrals);
+  var referral_payouts = 0;
   referrals.map(async (item) => {
     var final_percentage = (profit_percentage * referral_payout_percentage) / 100;
+    var base_amount = item.total_amount;
+    var amount = (base_amount * final_percentage) / 100;
+    referral_payouts += amount;
     await new Payouts({
       profit_id: profit_id,
       app_user_id: item._id,
       type: 2,
+      base_amount,
       percentage: final_percentage,
-      amount: (item.total_amount * final_percentage) / 100
+      amount
     }).save();
   });
+
+  //Update Profit
+  await Profits.updateOne(
+    { _id: profit_id },
+    { investor_payouts, referral_payouts },
+    { upsert: true }
+  );
 
   return;
 };
@@ -450,15 +523,37 @@ exports.account_info = async (req, res) => {
   }
 };
 
+exports.account_referees = async (req, res) => {
+  try {
+    var { app_user_id } = req.body;
+    var pledges = await Pledges.find({ referrer_id: app_user_id, status: 1 }); //approved pledges from my referral code
+    return res.json({ result: true, data: pledges });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
 //Dashbaord
 exports.dashboard_index = async (req, res) => {
   try {
+    var app_users = await AppUsers.find({}).countDocuments();
+    var projects = await Projects.find({}).countDocuments();
+    var pledges = await Pledges.find({}).countDocuments();
+
+    var ddd = await Pledges.aggregate([
+      { $match: { status: 1 } },
+      {
+        $group: { _id: null, total_amount: { $sum: '$amount' } }
+      }
+    ]);
+    var total_fund_raised = ddd[0] ? ddd[0].total_amount : 0;
+
     return res.json({
       result: true,
       data: {
-        projects: 1,
-        pledges: 12,
-        total_fund_raised: 12000
+        app_users: app_users,
+        projects: projects,
+        pledges: pledges,
+        total_fund_raised: total_fund_raised
       }
     });
   } catch (err) {
