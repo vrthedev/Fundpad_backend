@@ -11,7 +11,7 @@ const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
 
 exports.test = async (req, res) => {
-  return res.json({ result: true, data: 'API running version 1.4' });
+  return res.json({ result: true, data: 'API running version 1.5' });
 };
 
 // AppUsers
@@ -237,7 +237,7 @@ exports.pledge_upsert = async (req, res) => {
 
     input.referrer_id = investor.referrer_id;
     var referrer = await AppUsers.findOne({ _id: investor.referrer_id });
-    input.referrer_name = referrer.fullname;
+    input.referrer_name = referrer?.fullname;
 
     var { _id } = req.body;
     if (_id) {
