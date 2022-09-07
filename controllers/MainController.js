@@ -11,7 +11,7 @@ const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
 
 exports.test = async (req, res) => {
-  return res.json({ result: true, data: 'API running' });
+  return res.json({ result: true, data: 'API running version 1.3' });
 };
 
 // AppUsers
