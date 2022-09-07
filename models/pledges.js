@@ -4,8 +4,9 @@ const Schema = mongoose.Schema;
 const schema = new Schema(
   {
     investor_id: { type: String },
+    investor_name: { type: String },
     referrer_id: { type: String },
-    referrer_id: { type: String },
+    referrer_name: { type: String },
     amount: { type: Number },
     transaction: { type: String },
     status: { type: Number, default: 0 }

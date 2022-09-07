@@ -233,7 +233,11 @@ exports.pledge_upsert = async (req, res) => {
     var input = req.body;
     var { investor_id, wallet } = req.body;
     var investor = await AppUsers.findOne({ _id: investor_id });
+    input.investor_name = investor.fullname;
+
     input.referrer_id = investor.referrer_id;
+    var referrer = await AppUsers.findOne({ _id: investor.referrer_id });
+    input.referrer_name = referrer.fullname;
 
     var { _id } = req.body;
     if (_id) {
@@ -534,6 +538,7 @@ exports.account_referees = async (req, res) => {
     return res.json({ result: false, data: err.message });
   }
 };
+
 //Dashbaord
 exports.dashboard_index = async (req, res) => {
   try {
