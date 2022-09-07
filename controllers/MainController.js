@@ -298,7 +298,7 @@ exports.profit_add = async (req, res) => {
     var { name, percentage } = req.body;
     var profit_item = await new Profits({ name, percentage }).save();
 
-    await createPayouts(profit_item._id, percentage);
+    await createPayouts(name, profit_item._id, percentage);
 
     return res.json({ result: true, data: 'success' });
   } catch (err) {
@@ -317,7 +317,7 @@ exports.profit_delete = async (req, res) => {
   }
 };
 
-const createPayouts = async (profit_id, profit_percentage) => {
+const createPayouts = async (profit_name, profit_id, profit_percentage) => {
   //Investor payouts
   /* total pledges of investors
   [
@@ -340,6 +340,7 @@ const createPayouts = async (profit_id, profit_percentage) => {
     var amount = (base_amount * final_percentage) / 100;
     investor_payouts += amount;
     await new Payouts({
+      profit_name,
       profit_id: profit_id,
       app_user_id: item._id,
       type: 1,
@@ -371,6 +372,7 @@ const createPayouts = async (profit_id, profit_percentage) => {
     var amount = (base_amount * final_percentage) / 100;
     referral_payouts += amount;
     await new Payouts({
+      profit_name,
       profit_id: profit_id,
       app_user_id: item._id,
       type: 2,

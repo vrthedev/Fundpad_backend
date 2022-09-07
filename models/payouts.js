@@ -4,10 +4,7 @@ const Schema = mongoose.Schema;
 const schema = new Schema(
   {
     profit_id: { type: String },
-    profits: {
-      type: Schema.Types.ObjectId,
-      ref: 'profits'
-    },
+    profit_name: { type: String },
     app_user_id: { type: String },
     type: { type: Number },
     percentage: { type: Number },
