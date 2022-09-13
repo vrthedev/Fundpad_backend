@@ -18,8 +18,6 @@ exports.test = async (req, res) => {
 
 exports.firebase_notification = async (req, res) => {
   try {
-    const registrationToken =
-      'cqbk9R38TTiFRxTo1IeeKl:APA91bHj3ht66Y7mL_ePdKN1Qk7SUzt5-kjmiQLlD1_FvE9sseBGsoMEFEmgVA0zd3zLPEn6d-f29XyuBNbrBLquku6XclXzsWq_mg78Fpfvz7Nl2ch95virQa_DdzvT4g9xNOP5GP25';
     const message_notification = {
       notification: {
         title: 'Legacy',
@@ -32,16 +30,21 @@ exports.firebase_notification = async (req, res) => {
       timeToLive: 60 * 60 * 24
     };
 
-    admin
-      .messaging()
-      .sendToDevice(registrationToken, message, options)
-      .then((response) => {
-        return res.json({ result: true, data: 'success' });
-      })
-      .catch((error) => {
-        console.log(error);
-        return res.json({ result: false, data: error.message });
-      });
+    var app_users = await AppUsers.find({});
+    app_users.map(async (item) => {
+      if (!item.device_token) return;
+      var registrationToken = item.device_token;
+      admin
+        .messaging()
+        .sendToDevice(registrationToken, message, options)
+        .then((response) => {
+          console.log('Notification to ', item.email);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    });
+    return res.json({ result: true, data: 'success' });
   } catch (err) {
     console.log(err);
     return res.json({ result: false, data: err.message });
@@ -626,16 +629,30 @@ exports.account_info = async (req, res) => {
       }
     ]);
     var referral_payout_sum = ddd[0] ? ddd[0].referral_payout_sum : 0;
+    //additional_payouts
+    var additional_payouts = await Payouts.find({ app_user_id: app_user_id, type: 3 });
+    var ddd = await Payouts.aggregate([
+      { $match: { app_user_id: app_user_id, type: 3 } },
+      {
+        $group: {
+          _id: '$app_user_id',
+          additional_payout_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    var additional_payout_sum = ddd[0] ? ddd[0].additional_payout_sum : 0;
 
     return res.json({
       result: true,
       data: {
-        pledges_sum: pledges_sum,
-        pledges: pledges,
-        investor_payout_sum: investor_payout_sum,
-        investor_payouts: investor_payouts,
-        referral_payout_sum: referral_payout_sum,
-        referral_payouts: referral_payouts
+        pledges_sum,
+        pledges,
+        investor_payout_sum,
+        investor_payouts,
+        referral_payout_sum,
+        referral_payouts,
+        additional_payout_sum,
+        additional_payouts
       }
     });
   } catch (err) {
