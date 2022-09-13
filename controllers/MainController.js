@@ -275,12 +275,14 @@ exports.pledge_upsert = async (req, res) => {
     input.referrer_name = referrer?.fullname;
 
     var { _id } = req.body;
+    var return_data = 'success';
     if (_id) {
       //update
       await Pledges.updateOne({ _id }, input, { upsert: true });
     } else {
       //add
-      await new Pledges(input).save();
+      const row = await new Pledges(input).save();
+      return_data = row._id;
 
       //update user wallet
       investor.wallet = wallet;
@@ -298,7 +300,7 @@ exports.pledge_upsert = async (req, res) => {
     project.fund_raised = fund_raised;
     await project.save();
 
-    return res.json({ result: true, data: 'success' });
+    return res.json({ result: true, data: return_data });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
