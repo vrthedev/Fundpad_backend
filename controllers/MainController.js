@@ -8,6 +8,7 @@ const News = require('../models/news');
 const Faqs = require('../models/faqs');
 const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
 const { admin } = require('./FirebaseController');
+const { sendMail } = require('./MailController');
 
 const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
@@ -130,6 +131,8 @@ exports.appuser_sendresetemail = async (req, res) => {
   try {
     var { email } = req.body;
     //send reset password email
+    await sendMail('Batabata', process.env.MAIL_USER, email, 'NFT Token Purchased', "<h1>Reset Password</h1>");
+
     return res.json({ result: true, data: 'success' });
   } catch (err) {
     return res.json({ result: false, data: err.message });
