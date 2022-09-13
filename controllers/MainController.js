@@ -676,24 +676,45 @@ exports.account_referees = async (req, res) => {
 exports.dashboard_index = async (req, res) => {
   try {
     var app_users = await AppUsers.find({}).countDocuments();
-    var projects = await Projects.find({}).countDocuments();
-    var pledges = await Pledges.find({}).countDocuments();
+    var ddd = await Pledges.aggregate([
+      { $match: { status: 1 } },
+      {
+        $group: { _id: '$investor_id' }
+      }
+    ]);
+    var active_users = ddd.length;
 
+
+    var pledges_num = await Pledges.find({}).countDocuments();
+    var ddd = await Pledges.aggregate([
+      {
+        $group: { _id: null, total_amount: { $sum: '$amount' } }
+      }
+    ]);
+    var pledges_total = ddd[0] ? ddd[0].total_amount : 0;
+
+    var received_num = await Pledges.find({ status: 1 }).countDocuments();
     var ddd = await Pledges.aggregate([
       { $match: { status: 1 } },
       {
         $group: { _id: null, total_amount: { $sum: '$amount' } }
       }
     ]);
-    var total_fund_raised = ddd[0] ? ddd[0].total_amount : 0;
+    var received_total = ddd[0] ? ddd[0].total_amount : 0;
 
+    var project = await Projects.findOne({});
+  
     return res.json({
       result: true,
       data: {
-        app_users: app_users,
-        projects: projects,
-        pledges: pledges,
-        total_fund_raised: total_fund_raised
+        app_users,
+        active_users,
+        pledges_num,
+        pledges_total,
+        received_num,
+        received_total,
+        fund_target: project.fund_target,
+        fund_raised: project.fund_raised,
       }
     });
   } catch (err) {
