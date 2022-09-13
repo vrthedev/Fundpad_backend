@@ -2,16 +2,50 @@ const Projects = require('../models/projects');
 const Pledges = require('../models/pledges');
 const Profits = require('../models/profits');
 const Payouts = require('../models/payouts');
+const AdditionalShares = require('../models/additional_shares');
 const AppUsers = require('../models/app_users');
 const News = require('../models/news');
 const Faqs = require('../models/faqs');
 const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
+const { admin } = require('./FirebaseController');
 
 const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
 
 exports.test = async (req, res) => {
-  return res.json({ result: true, data: 'API running version 1.5' });
+  return res.json({ result: true, data: 'API running version 1.6' });
+};
+
+exports.firebase_notification = async (req, res) => {
+  try {
+    const registrationToken =
+      'cqbk9R38TTiFRxTo1IeeKl:APA91bHj3ht66Y7mL_ePdKN1Qk7SUzt5-kjmiQLlD1_FvE9sseBGsoMEFEmgVA0zd3zLPEn6d-f29XyuBNbrBLquku6XclXzsWq_mg78Fpfvz7Nl2ch95virQa_DdzvT4g9xNOP5GP25';
+    const message_notification = {
+      notification: {
+        title: 'Legacy',
+        body: req.body.message
+      }
+    };
+    const message = message_notification;
+    const options = {
+      priority: 'high',
+      timeToLive: 60 * 60 * 24
+    };
+
+    admin
+      .messaging()
+      .sendToDevice(registrationToken, message, options)
+      .then((response) => {
+        return res.json({ result: true, data: 'success' });
+      })
+      .catch((error) => {
+        console.log(error);
+        return res.json({ result: false, data: error.message });
+      });
+  } catch (err) {
+    console.log(err);
+    return res.json({ result: false, data: err.message });
+  }
 };
 
 // AppUsers
@@ -285,11 +319,13 @@ exports.profit_info = async (req, res) => {
 
     var investor_payouts = await Payouts.find({ profit_id, type: 1 });
     var referral_payouts = await Payouts.find({ profit_id, type: 2 });
+    var additional_payouts = await Payouts.find({ profit_id, type: 3 });
     return res.json({
       result: true,
       data: {
-        investor_payouts: investor_payouts,
-        referral_payouts: referral_payouts
+        investor_payouts,
+        referral_payouts,
+        additional_payouts
       }
     });
   } catch (err) {
@@ -330,6 +366,7 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
   ]
   */
   var investors = await Pledges.aggregate([
+    { $match: { status: 1 } },
     {
       $group: {
         _id: '$investor_id',
@@ -338,7 +375,10 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
     }
   ]);
   var investor_payouts = 0;
-  investors.map(async (item) => {
+  var additional_payouts = 0;
+  await investors.reduce(async (accum, item, key) => {
+    await accum;
+    //start
     var final_percentage = (profit_percentage * investor_payout_percentage) / 100;
     var base_amount = item.total_amount;
     var amount = (base_amount * final_percentage) / 100;
@@ -352,7 +392,27 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
       percentage: final_percentage,
       amount
     }).save();
-  });
+
+    var additionalinfo = await AdditionalShares.findOne({ app_user_id: item._id });
+    if (additionalinfo) {
+      var additional_percentage = (profit_percentage * additionalinfo.percentage) / 100;
+      var base_amount = item.total_amount;
+      var amount = (base_amount * additional_percentage) / 100;
+      additional_payouts += amount;
+      console.log(additional_payouts, amount);
+      await new Payouts({
+        profit_name,
+        profit_id: profit_id,
+        app_user_id: item._id,
+        type: 3,
+        base_amount,
+        percentage: additional_percentage,
+        amount
+      }).save();
+    }
+    //end
+    return 1;
+  }, Promise.resolve(''));
 
   //Referral payouts
   /* total pledges from user's referres
@@ -370,7 +430,9 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
     }
   ]);
   var referral_payouts = 0;
-  referrals.map(async (item) => {
+  await referrals.reduce(async (accum, item, key) => {
+    await accum;
+    //start
     var final_percentage = (profit_percentage * referral_payout_percentage) / 100;
     var base_amount = item.total_amount;
     var amount = (base_amount * final_percentage) / 100;
@@ -384,16 +446,60 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
       percentage: final_percentage,
       amount
     }).save();
-  });
+    //end
+    return 1;
+  }, Promise.resolve(''));
 
   //Update Profit
+  console.log('doing');
   await Profits.updateOne(
     { _id: profit_id },
-    { investor_payouts, referral_payouts },
+    { investor_payouts, referral_payouts, additional_payouts },
     { upsert: true }
   );
 
   return;
+};
+
+// Additional Shares
+exports.additional_get = async (req, res) => {
+  try {
+    var data = await AdditionalShares.find();
+    return res.json({ result: true, data: data });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.additional_upsert = async (req, res) => {
+  try {
+    var input = req.body;
+    var { _id, app_user_id } = req.body;
+    if (_id) {
+      //update
+      await AdditionalShares.updateOne({ _id }, input, { upsert: true });
+      return res.json({ result: true, data: 'success' });
+    } else {
+      //add
+      var existing = await AdditionalShares.findOne({ app_user_id });
+      if (existing) return res.json({ result: false, data: 'Already exists' });
+
+      await new AdditionalShares(input).save();
+      return res.json({ result: true, data: 'success' });
+    }
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
+exports.additional_delete = async (req, res) => {
+  try {
+    var { _id } = req.body;
+    await AdditionalShares.findOneAndDelete({ _id: _id });
+    return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
 };
 
 // News

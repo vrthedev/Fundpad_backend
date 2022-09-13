@@ -3,11 +3,8 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema(
   {
-    name: { type: String },
-    percentage: { type: Number },
-    investor_payouts: { type: Number },
-    referral_payouts: { type: Number },
-    additional_payouts: { type: Number },
+    app_user_id: { type: String },
+    percentage: { type: Number }
   },
   { timestamps: true }
 );
@@ -18,4 +15,4 @@ schema.options.toJSON.transform = (doc, ret) => {
   delete obj.__v;
   return obj;
 };
-module.exports = mongoose.model('profits', schema);
+module.exports = mongoose.model('additional_shares', schema);

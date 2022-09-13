@@ -27,6 +27,8 @@ router.post('/change-password', requireAuth, changePassword);
 //Main
 router.post('/test', [], MainController.test);
 
+router.post('/firebase/notification', [], MainController.firebase_notification);
+
 router.post('/appuser/register', [], MainController.appuser_register);
 router.post('/appuser/login', [], MainController.appuser_login);
 router.post('/appuser/sendResetpasswordEmail', [], MainController.appuser_sendresetemail);
@@ -50,6 +52,10 @@ router.post('/profit/info', [], MainController.profit_info);
 router.post('/profit/add', [], MainController.profit_add);
 router.post('/profit/delete', [], MainController.profit_delete);
 
+router.post('/additional/get', [], MainController.additional_get);
+router.post('/additional/upsert', [], MainController.additional_upsert);
+router.post('/additional/delete', [], MainController.additional_delete);
+
 router.post('/news/get', [], MainController.news_get);
 router.post('/news/upsert', [], MainController.news_upsert);
 router.post('/news/delete', [], MainController.news_delete);
@@ -57,6 +63,8 @@ router.post('/news/delete', [], MainController.news_delete);
 router.post('/faq/get', [], MainController.faq_get);
 router.post('/faq/upsert', [], MainController.faq_upsert);
 router.post('/faq/delete', [], MainController.faq_delete);
+
+
 
 router.post('/account/info', [], MainController.account_info);
 router.post('/account/referees', [], MainController.account_referees);
