@@ -208,13 +208,6 @@ exports.appuser_delete = async (req, res) => {
 exports.project_get = async (req, res) => {
   try {
     var project = await Projects.findOne();
-    var ddd = await Pledges.aggregate([
-      { $match: { status: 1 } },
-      {
-        $group: { _id: null, total_amount: { $sum: '$amount' } }
-      }
-    ]);
-    project.fund_raised = ddd[0] ? ddd[0].total_amount : 0;
 
     return res.json({ result: true, data: project });
   } catch (err) {
@@ -255,7 +248,12 @@ exports.project_delete = async (req, res) => {
 // Pledges
 exports.pledge_get = async (req, res) => {
   try {
-    var data = await Pledges.find();
+    var { investor_id } = req.body;
+    if (investor_id)
+      var data = await Pledges.findOne({ investor_id }, {}, { sort: { createdAt: -1 } });
+    //get last one
+    else var data = await Pledges.find();
+
     return res.json({ result: true, data: data });
   } catch (err) {
     return res.json({ result: false, data: err.message });
@@ -277,7 +275,6 @@ exports.pledge_upsert = async (req, res) => {
     if (_id) {
       //update
       await Pledges.updateOne({ _id }, input, { upsert: true });
-      return res.json({ result: true, data: 'success' });
     } else {
       //add
       await new Pledges(input).save();
@@ -285,9 +282,20 @@ exports.pledge_upsert = async (req, res) => {
       //update user wallet
       investor.wallet = wallet;
       await investor.save();
-
-      return res.json({ result: true, data: 'success' });
     }
+    //autosum for project fund_raised
+    var ddd = await Pledges.aggregate([
+      { $match: { status: 1 } },
+      {
+        $group: { _id: null, total_amount: { $sum: '$amount' } }
+      }
+    ]);
+    var fund_raised = ddd[0] ? ddd[0].total_amount : 0;
+    var project = await Projects.findOne({});
+    project.fund_raised = fund_raised;
+    await project.save();
+
+    return res.json({ result: true, data: 'success' });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
