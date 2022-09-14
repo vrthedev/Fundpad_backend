@@ -78,7 +78,7 @@ exports.appuser_register = async (req, res) => {
 
     const hashedPassword = await hashPassword2(password);
 
-    await new AppUsers({
+    const new_user = await new AppUsers({
       fullname: fullname,
       email: email,
       device_token: device_token,
@@ -90,7 +90,7 @@ exports.appuser_register = async (req, res) => {
       referral_code: my_referral_code,
       password: hashedPassword
     }).save();
-    return res.json({ result: true, data: 'success' });
+    return res.json({ result: true, data: new_user });
   } catch (err) {
     console.log(err);
     return res.json({ result: false, data: err.message });
@@ -131,7 +131,13 @@ exports.appuser_sendresetemail = async (req, res) => {
   try {
     var { email } = req.body;
     //send reset password email
-    await sendMail('Batabata', process.env.MAIL_USER, email, 'NFT Token Purchased', "<h1>Reset Password</h1>");
+    await sendMail(
+      'Batabata',
+      process.env.MAIL_USER,
+      email,
+      'NFT Token Purchased',
+      '<h1>Reset Password</h1>'
+    );
 
     return res.json({ result: true, data: 'success' });
   } catch (err) {
@@ -687,7 +693,6 @@ exports.dashboard_index = async (req, res) => {
     ]);
     var active_users = ddd.length;
 
-
     var pledges_num = await Pledges.find({}).countDocuments();
     var ddd = await Pledges.aggregate([
       {
@@ -706,7 +711,7 @@ exports.dashboard_index = async (req, res) => {
     var received_total = ddd[0] ? ddd[0].total_amount : 0;
 
     var project = await Projects.findOne({});
-  
+
     return res.json({
       result: true,
       data: {
@@ -717,7 +722,7 @@ exports.dashboard_index = async (req, res) => {
         received_num,
         received_total,
         fund_target: project.fund_target,
-        fund_raised: project.fund_raised,
+        fund_raised: project.fund_raised
       }
     });
   } catch (err) {

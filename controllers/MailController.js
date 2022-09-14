@@ -16,7 +16,6 @@ let sendMail = async (sender_name, sender_email, receiver_email, subject, html) 
     // text: 'plain text body', // plain text body
     html: html // html body
   };
-  console.log(receiver_email)
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       return console.log(error);
