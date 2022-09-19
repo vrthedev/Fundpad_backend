@@ -68,6 +68,8 @@ exports.appuser_register = async (req, res) => {
     } = req.body;
 
     var existing = await AppUsers.findOne({ email: email });
+    console.log(email)
+    console.log(existing)
     if (existing) return res.json({ result: false, data: 'Email already existed.' });
 
     var referrer = await AppUsers.findOne({ referral_code: register_referral_code });
