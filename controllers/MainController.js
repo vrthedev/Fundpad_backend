@@ -52,6 +52,28 @@ exports.firebase_notification = async (req, res) => {
   }
 };
 
+exports.mail_depositaddress = async (req, res) => {
+  try {
+    var { app_user_id } = req.body;
+    var user = await AppUsers.findOne({ _id: app_user_id });
+    //send reset password email
+    await sendMail(
+      'Legacy',
+      process.env.MAIL_USER,
+      user.email,
+      'Deposit address',
+      '<h1>Deposit address: 0x</h1>'
+    );
+
+    return res.json({ result: true, data: 'success' });
+
+    return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    console.log(err);
+    return res.json({ result: false, data: err.message });
+  }
+};
+
 // AppUsers
 exports.appuser_register = async (req, res) => {
   try {
@@ -68,8 +90,6 @@ exports.appuser_register = async (req, res) => {
     } = req.body;
 
     var existing = await AppUsers.findOne({ email: email });
-    console.log(email)
-    console.log(existing)
     if (existing) return res.json({ result: false, data: 'Email already existed.' });
 
     var referrer = await AppUsers.findOne({ referral_code: register_referral_code });
