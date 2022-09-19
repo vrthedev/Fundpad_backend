@@ -1,4 +1,5 @@
 controllers/*.json
+.env
 # Logs
 logs
 *.log

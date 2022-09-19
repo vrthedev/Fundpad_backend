@@ -56,7 +56,6 @@ exports.mail_depositaddress = async (req, res) => {
   try {
     var { app_user_id } = req.body;
     var user = await AppUsers.findOne({ _id: app_user_id });
-    //send reset password email
     await sendMail(
       'Legacy',
       process.env.MAIL_USER,
@@ -64,8 +63,6 @@ exports.mail_depositaddress = async (req, res) => {
       'Deposit address',
       '<h1>Deposit address: 0x</h1>'
     );
-
-    return res.json({ result: true, data: 'success' });
 
     return res.json({ result: true, data: 'success' });
   } catch (err) {
