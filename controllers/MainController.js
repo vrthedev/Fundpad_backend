@@ -313,6 +313,7 @@ exports.pledge_upsert = async (req, res) => {
       if (input.status == 1) {
         investor.isActiveUser = true;
         await investor.save();
+        console.log('active user', investor._id);
       }
     } else {
       //add
