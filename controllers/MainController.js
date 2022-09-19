@@ -294,6 +294,7 @@ exports.pledge_get = async (req, res) => {
 exports.pledge_upsert = async (req, res) => {
   try {
     var input = req.body;
+    console.log(input)
     var { investor_id } = req.body;
     var investor = await AppUsers.findOne({ _id: investor_id });
     input.investor_name = investor.fullname;
