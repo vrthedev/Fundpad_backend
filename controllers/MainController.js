@@ -61,7 +61,7 @@ exports.mail_depositaddress = async (req, res) => {
       process.env.MAIL_USER,
       user.email,
       'Deposit address',
-      '<h1>Deposit address: 0x</h1>'
+      '<h3>Deposit address: 0x</h3>'
     );
 
     return res.json({ result: true, data: 'success' });
@@ -294,7 +294,7 @@ exports.pledge_get = async (req, res) => {
 exports.pledge_upsert = async (req, res) => {
   try {
     var input = req.body;
-    var { investor_id, wallet } = req.body;
+    var { investor_id } = req.body;
     var investor = await AppUsers.findOne({ _id: investor_id });
     input.investor_name = investor.fullname;
 
@@ -307,14 +307,17 @@ exports.pledge_upsert = async (req, res) => {
     if (_id) {
       //update
       await Pledges.updateOne({ _id }, input, { upsert: true });
+      return_data = _id;
+
+      //approve, then user is active user
+      if (input.status == 1) {
+        investor.isActiveUser = true;
+        await investor.save();
+      }
     } else {
       //add
       const row = await new Pledges(input).save();
       return_data = row._id;
-
-      //update user wallet
-      investor.wallet = wallet;
-      await investor.save();
     }
     //autosum for project fund_raised
     var ddd = await Pledges.aggregate([

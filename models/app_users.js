@@ -12,7 +12,8 @@ const schema = new Schema(
     password: { type: String },
     referral_code: { type: String },
     referrer_id: { type: String },
-    device_token: { type: String }
+    device_token: { type: String },
+    isActiveUser: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
