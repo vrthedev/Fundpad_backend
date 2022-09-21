@@ -9,12 +9,13 @@ const Faqs = require('../models/faqs');
 const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
 const { admin } = require('./FirebaseController');
 const { sendMail } = require('./MailController');
+// const { getUserInvestVolume } = require('./util');
 
 const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
 
 exports.test = async (req, res) => {
-  return res.json({ result: true, data: 'API running version 1.6' });
+  return res.json({ result: true, data: 'API running version 1.7' });
 };
 
 exports.firebase_notification = async (req, res) => {
@@ -192,9 +193,95 @@ exports.appuser_info = async (req, res) => {
   }
 };
 
+//sum of pledges which is status = 1 (approved)
+const getUserInvestVolume = async (app_user_id) => {
+  try {
+    var ddd = await Pledges.aggregate([
+      { $match: { status: 1 } },
+      // { $match: { investor_id: app_user_id, status: 1 } }, //not working strange
+      {
+        $group: {
+          _id: '$investor_id',
+          invest_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    const found = ddd.find((element) => element._id == app_user_id);
+    return found ? found.invest_sum : 0;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
+//sum of invest amount of direct referrers
+const getUserReferralVolume = async (app_user_id) => {
+  try {
+    var referrers = await AppUsers.find({ referrer_id: app_user_id });
+    var total = 0;
+    await referrers.reduce(async (accum, item, key) => {
+      await accum;
+      var user_invest_amount = await getUserInvestVolume(item._id);
+      total += user_invest_amount;
+      return 1;
+    }, Promise.resolve(''));
+    return total;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
+//sum of invest amount of all referral underlevels and hisself
+const getUserBillingVolume = async (app_user_id) => {
+  try {
+    const getUnderlevels = async (app_user_id) => {
+      var underlevels = await AppUsers.find({ referrer_id: app_user_id });
+      await underlevels.reduce(async (accum, item, key) => {
+        await accum;
+        var subunderlevels = await getUnderlevels(item._id);
+        underlevels = underlevels.concat(subunderlevels);
+        return 1;
+      }, Promise.resolve(''));
+      return underlevels;
+    };
+
+    var user = await AppUsers.find({ _id: app_user_id });
+    var underlevels = await getUnderlevels(app_user_id);
+    var billings = user.concat(underlevels);
+
+    var total = 0;
+    await billings.reduce(async (accum, item, key) => {
+      await accum;
+      var user_invest_amount = await getUserInvestVolume(item._id);
+      total += user_invest_amount;
+      return 1;
+    }, Promise.resolve(''));
+    return total;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
+
+const addUserVolumeInfo = async (user) => {
+  try {
+    user.invest_volume = await getUserInvestVolume(user._id);
+    user.referral_volume = await getUserReferralVolume(user._id);
+    user.billing_volume = await getUserBillingVolume(user._id);
+  } catch (err) {
+    console.log(err);
+    return user;
+  }
+};
 exports.appuser_get = async (req, res) => {
   try {
-    var data = await AppUsers.find();
+    var data = await AppUsers.find().lean();
+
+    await data.reduce(async (accum, item, key) => {
+      await accum;
+      item = await addUserVolumeInfo(item);
+      return 1;
+    }, Promise.resolve(''));
+    
     return res.json({ result: true, data: data });
   } catch (err) {
     return res.json({ result: false, data: err.message });
@@ -294,7 +381,7 @@ exports.pledge_get = async (req, res) => {
 exports.pledge_upsert = async (req, res) => {
   try {
     var input = req.body;
-    console.log(input)
+    console.log(input);
     var { investor_id } = req.body;
     var investor = await AppUsers.findOne({ _id: investor_id });
     input.investor_name = investor.fullname;
@@ -628,6 +715,7 @@ exports.faq_delete = async (req, res) => {
 exports.account_info = async (req, res) => {
   try {
     var { app_user_id } = req.body;
+    console.log(app_user_id);
     //pledges
     var pledges = await Pledges.find({ investor_id: app_user_id });
     var ddd = await Pledges.aggregate([
