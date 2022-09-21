@@ -843,8 +843,8 @@ exports.dashboard_index = async (req, res) => {
         pledges_total,
         received_num,
         received_total,
-        fund_target: project.fund_target,
-        fund_raised: project.fund_raised
+        fund_target: project ? project.fund_target : 0,
+        fund_raised: project ? project.fund_raised : 0
       }
     });
   } catch (err) {
