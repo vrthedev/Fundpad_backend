@@ -6,6 +6,7 @@ const AdditionalShares = require('../models/additional_shares');
 const AppUsers = require('../models/app_users');
 const News = require('../models/news');
 const Faqs = require('../models/faqs');
+const Notifications = require('../models/notifications');
 const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
 const { admin } = require('./FirebaseController');
 const { sendMail } = require('./MailController');
@@ -20,13 +21,14 @@ exports.test = async (req, res) => {
 
 exports.firebase_notification = async (req, res) => {
   try {
-    const message_notification = {
+    await new Notifications({ content: req.body.message }).save();
+
+    const message = {
       notification: {
         title: 'Legacy',
         body: req.body.message
       }
     };
-    const message = message_notification;
     const options = {
       priority: 'high',
       timeToLive: 60 * 60 * 24
@@ -47,6 +49,15 @@ exports.firebase_notification = async (req, res) => {
         });
     });
     return res.json({ result: true, data: 'success' });
+  } catch (err) {
+    console.log(err);
+    return res.json({ result: false, data: err.message });
+  }
+};
+exports.notification_get = async (req, res) => {
+  try {
+    var rows = await Notifications.find({}, {}, { sort: { createdAt: -1 } });
+    return res.json({ result: true, data: rows });
   } catch (err) {
     console.log(err);
     return res.json({ result: false, data: err.message });

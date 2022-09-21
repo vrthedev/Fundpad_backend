@@ -28,6 +28,7 @@ router.post('/change-password', requireAuth, changePassword);
 router.post('/test', [], MainController.test);
 
 router.post('/firebase/notification', [], MainController.firebase_notification);
+router.post('/notification/get', [], MainController.notification_get);
 router.post('/mail/depositAddress', [], MainController.mail_depositaddress);
 
 router.post('/appuser/register', [], MainController.appuser_register);
