@@ -230,6 +230,15 @@ const getUserReferralVolume = async (app_user_id) => {
     return 0;
   }
 };
+const getUserReferralCount = async (app_user_id) => {
+  try {
+    var referrers = await AppUsers.find({ referrer_id: app_user_id });
+    return referrers.length;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
 //sum of invest amount of all referral underlevels and hisself
 const getUserBillingVolume = async (app_user_id) => {
   try {
@@ -266,6 +275,7 @@ const addUserVolumeInfo = async (user) => {
   try {
     user.invest_volume = await getUserInvestVolume(user._id);
     user.referral_volume = await getUserReferralVolume(user._id);
+    user.referral_count = await getUserReferralCount(user._id);
     user.billing_volume = await getUserBillingVolume(user._id);
   } catch (err) {
     console.log(err);
@@ -281,7 +291,7 @@ exports.appuser_get = async (req, res) => {
       item = await addUserVolumeInfo(item);
       return 1;
     }, Promise.resolve(''));
-    
+
     return res.json({ result: true, data: data });
   } catch (err) {
     return res.json({ result: false, data: err.message });

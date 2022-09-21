@@ -1,5 +1,5 @@
 module.exports = {
-  port: process.env.PORT || 8000,
+  port: process.env.PORT || 3000,
   db: {
     prod: process.env.DATABASE_URL || 'mongodb://localhost/fundpad',
     test: 'mongodb://localhost/fundpad',
