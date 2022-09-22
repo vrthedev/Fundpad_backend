@@ -303,7 +303,7 @@ const getUserInvestorPayouts = async (app_user_id) => {
 const getUserReferralPayouts = async (app_user_id) => {
   try {
     var ddd = await Payouts.aggregate([
-      { $match: { app_user_id: app_user_id, type: 2 } },
+      { $match: { type: 2 } },
       {
         $group: {
           _id: '$app_user_id',
@@ -311,8 +311,9 @@ const getUserReferralPayouts = async (app_user_id) => {
         }
       }
     ]);
-    var referral_payout_sum = ddd[0] ? ddd[0].referral_payout_sum : 0;
-    return referral_payout_sum;
+
+    const found = ddd.find((element) => element._id == app_user_id);
+    return found ? found.referral_payout_sum : 0;
   } catch (err) {
     console.log(err);
     return 0;
