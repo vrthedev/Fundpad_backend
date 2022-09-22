@@ -70,6 +70,7 @@ router.post('/faq/delete', [], MainController.faq_delete);
 
 router.post('/account/info', [], MainController.account_info);
 router.post('/account/referees', [], MainController.account_referees);
+router.post('/account/referrals', [], MainController.account_referrals);
 
 router.post('/dashboard/index', [], MainController.dashboard_index);
 

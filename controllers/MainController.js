@@ -854,6 +854,16 @@ exports.account_referees = async (req, res) => {
   }
 };
 
+exports.account_referrals = async (req, res) => {
+  try {
+    var { app_user_id } = req.body;
+    var referees = await AppUsers.find({ referrer_id: app_user_id });
+    return res.json({ result: true, data: referees });
+  } catch (err) {
+    return res.json({ result: false, data: err.message });
+  }
+};
+
 //Dashbaord
 exports.dashboard_index = async (req, res) => {
   try {
