@@ -197,7 +197,7 @@ exports.appuser_info = async (req, res) => {
     var { app_user_id } = req.body;
     console.log(app_user_id);
     var app_user = await AppUsers.findOne({ _id: app_user_id }).lean();
-    // app_user = await addUserVolumeInfo(app_user);
+    app_user = await addUserVolumeInfo(app_user);
     return res.json({ result: true, data: app_user });
   } catch (err) {
     return res.json({ result: false, data: err.message });
@@ -329,6 +329,7 @@ const addUserVolumeInfo = async (user) => {
     user.billing_volume = await getUserBillingVolume(user._id);
     user.investor_payouts = await getUserInvestorPayouts(user._id);
     user.referral_payouts = await getUserReferralPayouts(user._id);
+    return user;
   } catch (err) {
     console.log(err);
     return user;
