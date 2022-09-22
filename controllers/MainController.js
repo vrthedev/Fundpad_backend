@@ -283,7 +283,8 @@ const getUserBillingVolume = async (app_user_id) => {
 const getUserInvestorPayouts = async (app_user_id) => {
   try {
     var ddd = await Payouts.aggregate([
-      { $match: { app_user_id: app_user_id, type: 1 } },
+      // { $match: { app_user_id: app_user_id, type: 1 } },
+      { $match: { type: 1 } },
       {
         $group: {
           _id: '$app_user_id',
@@ -291,8 +292,9 @@ const getUserInvestorPayouts = async (app_user_id) => {
         }
       }
     ]);
-    var investor_payout_sum = ddd[0] ? ddd[0].investor_payout_sum : 0;
-    return investor_payout_sum;
+
+    const found = ddd.find((element) => element._id == app_user_id);
+    return found ? found.investor_payout_sum : 0;
   } catch (err) {
     console.log(err);
     return 0;
