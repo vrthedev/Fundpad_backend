@@ -197,6 +197,7 @@ exports.appuser_info = async (req, res) => {
     var { app_user_id } = req.body;
     console.log(app_user_id);
     var app_user = await AppUsers.findOne({ _id: app_user_id });
+    app_user = await addUserVolumeInfo(app_user);
     return res.json({ result: true, data: app_user });
   } catch (err) {
     return res.json({ result: false, data: err.message });
