@@ -431,7 +431,7 @@ exports.pledge_upsert = async (req, res) => {
     }
     //autosum for project fund_raised
     var ddd = await Pledges.aggregate([
-      { $match: { status: 1 } },
+      // { $match: { status: 1 } },
       {
         $group: { _id: null, total_amount: { $sum: '$amount' } }
       }
