@@ -203,6 +203,24 @@ exports.appuser_info = async (req, res) => {
     return res.json({ result: false, data: err.message });
   }
 };
+//sum of pledges which is status = 1 (approved)
+const getUserPledgedAmount = async (app_user_id) => {
+  try {
+    var ddd = await Pledges.aggregate([    
+      {
+        $group: {
+          _id: '$investor_id',
+          invest_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    const found = ddd.find((element) => element._id == app_user_id);
+    return found ? found.invest_sum : 0;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
 
 //sum of pledges which is status = 1 (approved)
 const getUserConfirmedAmount = async (app_user_id) => {
@@ -324,6 +342,7 @@ const getUserReferralPayouts = async (app_user_id) => {
 const addUserVolumeInfo = async (user) => {
   try {
     user.confirmed_amount = await getUserConfirmedAmount(user._id);
+    user.pledged_amount = await getUserPledgedAmount(user._id);
     user.referral_volume = await getUserReferralVolume(user._id);
     user.referral_count = await getUserReferralCount(user._id);
     user.billing_volume = await getUserBillingVolume(user._id);
