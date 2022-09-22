@@ -10,7 +10,6 @@ const Notifications = require('../models/notifications');
 const { createToken, hashPassword2, verifyPassword } = require('../utils/authentication');
 const { admin } = require('./FirebaseController');
 const { sendMail } = require('./MailController');
-// const { getUserInvestVolume } = require('./util');
 
 const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
@@ -205,7 +204,7 @@ exports.appuser_info = async (req, res) => {
 };
 
 //sum of pledges which is status = 1 (approved)
-const getUserInvestVolume = async (app_user_id) => {
+const getUserConfirmedAmount = async (app_user_id) => {
   try {
     var ddd = await Pledges.aggregate([
       { $match: { status: 1 } },
@@ -231,7 +230,7 @@ const getUserReferralVolume = async (app_user_id) => {
     var total = 0;
     await referrers.reduce(async (accum, item, key) => {
       await accum;
-      var user_invest_amount = await getUserInvestVolume(item._id);
+      var user_invest_amount = await getUserConfirmedAmount(item._id);
       total += user_invest_amount;
       return 1;
     }, Promise.resolve(''));
@@ -271,7 +270,7 @@ const getUserBillingVolume = async (app_user_id) => {
     var total = 0;
     await billings.reduce(async (accum, item, key) => {
       await accum;
-      var user_invest_amount = await getUserInvestVolume(item._id);
+      var user_invest_amount = await getUserConfirmedAmount(item._id);
       total += user_invest_amount;
       return 1;
     }, Promise.resolve(''));
@@ -281,13 +280,51 @@ const getUserBillingVolume = async (app_user_id) => {
     return 0;
   }
 };
+const getUserInvestorPayouts = async (app_user_id) => {
+  try {
+    var ddd = await Payouts.aggregate([
+      { $match: { app_user_id: app_user_id, type: 1 } },
+      {
+        $group: {
+          _id: '$app_user_id',
+          investor_payout_sum: { $sum: '$amount' } //sum of amount for status = 1
+        }
+      }
+    ]);
+    var investor_payout_sum = ddd[0] ? ddd[0].investor_payout_sum : 0;
+    return investor_payout_sum;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
+const getUserReferralPayouts = async (app_user_id) => {
+  try {
+    var ddd = await Payouts.aggregate([
+      { $match: { app_user_id: app_user_id, type: 2 } },
+      {
+        $group: {
+          _id: '$app_user_id',
+          referral_payout_sum: { $sum: '$amount' } //sum of amount for status = 2
+        }
+      }
+    ]);
+    var referral_payout_sum = ddd[0] ? ddd[0].referral_payout_sum : 0;
+    return referral_payout_sum;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
 
 const addUserVolumeInfo = async (user) => {
   try {
-    user.invest_volume = await getUserInvestVolume(user._id);
+    user.confirmed_amount = await getUserConfirmedAmount(user._id);
     user.referral_volume = await getUserReferralVolume(user._id);
     user.referral_count = await getUserReferralCount(user._id);
     user.billing_volume = await getUserBillingVolume(user._id);
+    user.investor_payouts = await getUserInvestorPayouts(user._id);
+    user.referral_payouts = await getUserReferralPayouts(user._id);
   } catch (err) {
     console.log(err);
     return user;
