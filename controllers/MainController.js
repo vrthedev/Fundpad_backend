@@ -879,7 +879,7 @@ exports.account_referrals = async (req, res) => {
     var investor_payouts = [];
     await referees.reduce(async (accum, item, key) => {
       await accum;
-      var payouts = await Payouts.find({ app_user_id: item.app_user_id, type: 1 });
+      var payouts = await Payouts.find({ app_user_id: item._id, type: 1 });
       console.log(payouts)
       investor_payouts = investor_payouts.concat(payouts);
       return 1;
