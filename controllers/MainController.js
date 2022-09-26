@@ -655,7 +655,8 @@ const createPayouts = async (year, month, profit_id, profit_percentage) => {
     var amount = (base_amount * final_percentage) / 100;
     referral_payouts += amount;
     await new Payouts({
-      profit_name,
+      year,
+      month,
       profit_id: profit_id,
       app_user_id: item._id,
       type: 2,
