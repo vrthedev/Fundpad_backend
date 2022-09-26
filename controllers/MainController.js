@@ -870,27 +870,19 @@ exports.account_info = async (req, res) => {
     return res.json({ result: false, data: err.message });
   }
 };
-
-exports.account_referees = async (req, res) => {
-  try {
-    var { app_user_id } = req.body;
-    var pledges = await Pledges.find({ referrer_id: app_user_id, status: 1 }); //approved pledges from my referral code
-    return res.json({ result: true, data: pledges });
-  } catch (err) {
-    return res.json({ result: false, data: err.message });
-  }
-};
-
+//return referres investor payouts
 exports.account_referrals = async (req, res) => {
   try {
     var { app_user_id } = req.body;
-    var referees = await AppUsers.find({ referrer_id: app_user_id }).lean();
+    var referees = await AppUsers.find({ referrer_id: app_user_id });
+    var investor_payouts = [];
     await referees.reduce(async (accum, item, key) => {
       await accum;
-      item = await addUserVolumeInfo(item);
+      var payouts = await Payouts.find({ app_user_id: item.app_user_id, type: 1 });
+      investor_payouts = investor_payouts.concat(payouts);
       return 1;
     }, Promise.resolve(''));
-    return res.json({ result: true, data: referees });
+    return res.json({ result: true, data: investor_payouts });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }
