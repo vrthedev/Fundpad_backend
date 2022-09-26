@@ -875,10 +875,12 @@ exports.account_referrals = async (req, res) => {
   try {
     var { app_user_id } = req.body;
     var referees = await AppUsers.find({ referrer_id: app_user_id });
+    console.log(referees)
     var investor_payouts = [];
     await referees.reduce(async (accum, item, key) => {
       await accum;
       var payouts = await Payouts.find({ app_user_id: item.app_user_id, type: 1 });
+      console.log(payouts)
       investor_payouts = investor_payouts.concat(payouts);
       return 1;
     }, Promise.resolve(''));
