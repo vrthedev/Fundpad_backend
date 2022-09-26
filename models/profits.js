@@ -3,7 +3,8 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema(
   {
-    name: { type: String },
+    year: { type: Number },
+    month: { type: Number },
     percentage: { type: Number },
     investor_payouts: { type: Number },
     referral_payouts: { type: Number },

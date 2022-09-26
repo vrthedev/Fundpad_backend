@@ -206,7 +206,7 @@ exports.appuser_info = async (req, res) => {
 //sum of pledges which is status = 1 (approved)
 const getUserPledgedAmount = async (app_user_id) => {
   try {
-    var ddd = await Pledges.aggregate([    
+    var ddd = await Pledges.aggregate([
       {
         $group: {
           _id: '$investor_id',
@@ -550,10 +550,10 @@ exports.profit_info = async (req, res) => {
 
 exports.profit_add = async (req, res) => {
   try {
-    var { name, percentage } = req.body;
-    var profit_item = await new Profits({ name, percentage }).save();
+    var { year, month, percentage } = req.body;
+    var profit_item = await new Profits({ year, month, percentage }).save();
 
-    await createPayouts(name, profit_item._id, percentage);
+    await createPayouts(year, month, profit_item._id, percentage);
 
     return res.json({ result: true, data: 'success' });
   } catch (err) {
@@ -572,7 +572,7 @@ exports.profit_delete = async (req, res) => {
   }
 };
 
-const createPayouts = async (profit_name, profit_id, profit_percentage) => {
+const createPayouts = async (year, month, profit_id, profit_percentage) => {
   //Investor payouts
   /* total pledges of investors
   [
@@ -599,7 +599,8 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
     var amount = (base_amount * final_percentage) / 100;
     investor_payouts += amount;
     await new Payouts({
-      profit_name,
+      year,
+      month,
       profit_id: profit_id,
       app_user_id: item._id,
       type: 1,
@@ -616,7 +617,8 @@ const createPayouts = async (profit_name, profit_id, profit_percentage) => {
       additional_payouts += amount;
       console.log(additional_payouts, amount);
       await new Payouts({
-        profit_name,
+        year,
+        month,
         profit_id: profit_id,
         app_user_id: item._id,
         type: 3,
@@ -847,8 +849,8 @@ exports.account_info = async (req, res) => {
     ]);
     var additional_payout_sum = ddd[0] ? ddd[0].additional_payout_sum : 0;
 
-    var referral_volume= await getUserReferralVolume(app_user_id);
-    
+    var referral_volume = await getUserReferralVolume(app_user_id);
+
     return res.json({
       result: true,
       data: {

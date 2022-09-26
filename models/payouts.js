@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const schema = new Schema(
   {
     profit_id: { type: String },
-    profit_name: { type: String },
+    year: { type: Number },
+    month: { type: Number },
     app_user_id: { type: String },
     type: { type: Number },
     percentage: { type: Number },
