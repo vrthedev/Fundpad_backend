@@ -847,6 +847,8 @@ exports.account_info = async (req, res) => {
     ]);
     var additional_payout_sum = ddd[0] ? ddd[0].additional_payout_sum : 0;
 
+    var referral_volume= await getUserReferralVolume(app_user_id);
+    
     return res.json({
       result: true,
       data: {
@@ -857,7 +859,8 @@ exports.account_info = async (req, res) => {
         referral_payout_sum,
         referral_payouts,
         additional_payout_sum,
-        additional_payouts
+        additional_payouts,
+        referral_volume
       }
     });
   } catch (err) {
