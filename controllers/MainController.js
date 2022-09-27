@@ -144,13 +144,13 @@ exports.appuser_login = async (req, res) => {
     if (user) {
       var checkpassword = await verifyPassword(password, user.password);
       if (!checkpassword)
-        return res.json({ result: false, data: 'Email and Password is not corret.' });
+        return res.json({ result: false, data: 'Email and Password is not correct.' });
 
       user.device_token = device_token;
       await user.save();
       return res.json({ result: true, data: user });
     } else {
-      return res.json({ result: false, data: 'Email and Password is not corret.' });
+      return res.json({ result: false, data: 'Email and Password is not correct.' });
     }
   } catch (err) {
     return res.json({ result: false, data: err.message });
