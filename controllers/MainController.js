@@ -505,7 +505,7 @@ exports.pledge_upsert = async (req, res) => {
     //send email to admin
     var pledge = await Pledges.findOne({ _id: pledge_id });
     var html = `<p>Username: ${investor.fullname}</p><p>Email: ${investor.email}</p><p>Pledge Amount: ${pledge.amount}</p><p>TXID: ${pledge.transaction}</p>`;
-    await sendMail('vishnurao@outlook.com', 'Pledge', html);
+    await sendMail(process.env.ADMIN_EMAIL, 'Pledge', html);
 
     return res.json({ result: true, data: pledge_id });
   } catch (err) {
