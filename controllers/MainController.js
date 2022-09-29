@@ -67,13 +67,7 @@ exports.mail_depositaddress = async (req, res) => {
   try {
     var { app_user_id } = req.body;
     var user = await AppUsers.findOne({ _id: app_user_id });
-    await sendMail(
-      'Legacy',
-      process.env.MAIL_USER,
-      user.email,
-      'Deposit address',
-      '<h3>Deposit address: 0x</h3>'
-    );
+    await sendMail(user.email, 'Deposit address', '<h3>Deposit address: 0x</h3>');
 
     return res.json({ result: true, data: 'success' });
   } catch (err) {
@@ -473,11 +467,11 @@ exports.pledge_upsert = async (req, res) => {
     input.referrer_name = referrer?.fullname;
 
     var { _id } = req.body;
-    var return_data = 'success';
+    var pledge_id;
     if (_id) {
       //update
       await Pledges.updateOne({ _id }, input, { upsert: true });
-      return_data = _id;
+      pledge_id = _id;
 
       //approve, then user is active user
       if (input.status == 1) {
@@ -488,7 +482,7 @@ exports.pledge_upsert = async (req, res) => {
     } else {
       //add
       const row = await new Pledges(input).save();
-      return_data = row._id;
+      pledge_id = row._id;
     }
     //autosum for project fund_raised
     var ddd = await Pledges.aggregate([
@@ -502,7 +496,12 @@ exports.pledge_upsert = async (req, res) => {
     project.fund_raised = fund_raised;
     await project.save();
 
-    return res.json({ result: true, data: return_data });
+    //send email to admin
+    var pledge = await Pledges.findOne({ _id: pledge_id });
+    var html = `<p>Username: ${investor.fullname}</p><p>Email: ${investor.email}</p><p>Pledge Amount: ${pledge.amount}</p><p>TXID: ${pledge.transaction}</p>`;
+    await sendMail('webdev181011@gmail.com', 'Pledge', html);
+
+    return res.json({ result: true, data: pledge_id });
   } catch (err) {
     return res.json({ result: false, data: err.message });
   }

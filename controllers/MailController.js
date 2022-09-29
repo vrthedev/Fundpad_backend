@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-let sendMail = async (sender_name, sender_email, receiver_email, subject, html) => {
+let sendMail = async (receiver_email, subject, html) => {
   var transporter = nodemailer.createTransport({
     host: process.env.MAIL_SERVER,
     port: process.env.MAIL_PORT,
@@ -9,6 +9,10 @@ let sendMail = async (sender_name, sender_email, receiver_email, subject, html) 
       pass: process.env.MAIL_PASSWORD
     }
   });
+
+  var sender_name = 'Legacy';
+  var sender_email = process.env.MAIL_USER;
+
   let mailOptions = {
     from: `"${sender_name}" <${sender_email}>`, // sender address
     to: receiver_email, // list of receivers
@@ -25,4 +29,4 @@ let sendMail = async (sender_name, sender_email, receiver_email, subject, html) 
   });
 };
 
-module.exports.sendMail = sendMail
+module.exports.sendMail = sendMail;
