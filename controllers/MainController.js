@@ -102,7 +102,7 @@ exports.appuser_register = async (req, res) => {
 
     const hashedPassword = await hashPassword2(password);
 
-    const new_user = await new AppUsers({
+    var new_user = await new AppUsers({
       fullname: fullname,
       email: email,
       device_token: device_token,
@@ -114,7 +114,10 @@ exports.appuser_register = async (req, res) => {
       referral_code: my_referral_code,
       password: hashedPassword
     }).save();
-    return res.json({ result: true, data: new_user });
+
+    var useritem = await AppUsers.findOne({ _id: new_user._id }).lean();
+    useritem = await addUserVolumeInfo(useritem);
+    return res.json({ result: true, data: useritem });
   } catch (err) {
     console.log(err);
     return res.json({ result: false, data: err.message });
@@ -142,6 +145,10 @@ exports.appuser_login = async (req, res) => {
 
       user.device_token = device_token;
       await user.save();
+
+      var user = await AppUsers.findOne({ email: email }).lean();
+      user = await addUserVolumeInfo(user);
+
       return res.json({ result: true, data: user });
     } else {
       return res.json({ result: false, data: 'Email and Password is not correct.' });
@@ -892,10 +899,10 @@ exports.account_referrals = async (req, res) => {
 exports.account_referees = async (req, res) => {
   try {
     var { app_user_id } = req.body;
-    var referees = await AppUsers.find({ referrer_id: app_user_id }).lean();    
+    var referees = await AppUsers.find({ referrer_id: app_user_id }).lean();
     await referees.reduce(async (accum, item, key) => {
       await accum;
-      item = await addUserVolumeInfo(item);     
+      item = await addUserVolumeInfo(item);
       return 1;
     }, Promise.resolve(''));
     return res.json({ result: true, data: referees });
@@ -903,7 +910,6 @@ exports.account_referees = async (req, res) => {
     return res.json({ result: false, data: err.message });
   }
 };
-
 
 //Dashbaord
 exports.dashboard_index = async (req, res) => {
