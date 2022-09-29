@@ -892,7 +892,7 @@ exports.account_referrals = async (req, res) => {
 exports.account_referees = async (req, res) => {
   try {
     var { app_user_id } = req.body;
-    var referees = await AppUsers.find({ referrer_id: app_user_id });    
+    var referees = await AppUsers.find({ referrer_id: app_user_id }).lean();    
     await referees.reduce(async (accum, item, key) => {
       await accum;
       item = await addUserVolumeInfo(item);     
