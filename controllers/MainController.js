@@ -15,7 +15,7 @@ const investor_payout_percentage = 50;
 const referral_payout_percentage = 10;
 
 exports.test = async (req, res) => {
-  return res.json({ result: true, data: 'API running version 1.7' });
+  return res.json({ result: true, data: 'API running version 1.8' });
 };
 
 exports.firebase_notification = async (req, res) => {
@@ -98,7 +98,7 @@ exports.appuser_register = async (req, res) => {
     if (!referrer) return res.json({ result: false, data: 'Referral Code is not correct.' });
     const referrer_id = referrer._id;
 
-    const my_referral_code = generateRandomString(15);
+    const my_referral_code = generateReferralCode(fullname);
 
     const hashedPassword = await hashPassword2(password);
 
@@ -124,14 +124,28 @@ exports.appuser_register = async (req, res) => {
   }
 };
 
-function generateRandomString(length) {
-  var result = '';
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+function generateReferralCode(fullname) {
+  function generateRandomString(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
   }
-  return result;
+
+  function generateRandomNumber(length) {
+    var result = '';
+    var characters = '0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
+
+  return (fullname+ generateRandomString(6)).substring(0,6) + generateRandomNumber(4);
 }
 
 exports.appuser_login = async (req, res) => {
@@ -384,7 +398,7 @@ exports.appuser_upsert = async (req, res) => {
       var existing = await AppUsers.findOne({ email: input.email });
       if (existing) return res.json({ result: false, data: 'Email already existed.' });
 
-      input.referral_code = generateRandomString(15);
+      input.referral_code = generateReferralCode(input.fullname);
       input.password = await hashPassword2('12345');
 
       await new AppUsers(input).save();
