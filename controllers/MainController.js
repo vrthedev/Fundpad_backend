@@ -145,7 +145,7 @@ function generateReferralCode(fullname) {
     return result;
   }
 
-  return (fullname+ generateRandomString(6)).substring(0,6) + generateRandomNumber(4);
+  return (fullname + generateRandomString(6)).substring(0, 6) + generateRandomNumber(4);
 }
 
 exports.appuser_login = async (req, res) => {
@@ -176,13 +176,7 @@ exports.appuser_sendresetemail = async (req, res) => {
   try {
     var { email } = req.body;
     //send reset password email
-    await sendMail(
-      'Batabata',
-      process.env.MAIL_USER,
-      email,
-      'NFT Token Purchased',
-      '<h1>Reset Password</h1>'
-    );
+    await sendMail(email, 'Reset Password', '<a href="http://legacy1.co.uk/login">Click this link to reset password.</a>');
 
     return res.json({ result: true, data: 'success' });
   } catch (err) {
