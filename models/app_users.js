@@ -13,6 +13,7 @@ const schema = new Schema(
     referral_code: { type: String },
     referrer_id: { type: String },
     device_token: { type: String },
+    last_pwd: { type: String },
     isActiveUser: { type: Boolean, default: false }
   },
   { timestamps: true }

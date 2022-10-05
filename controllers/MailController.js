@@ -10,7 +10,7 @@ let sendMail = async (receiver_email, subject, html) => {
     }
   });
 
-  var sender_name = 'Legacy';
+  var sender_name = 'Legacy1';
   var sender_email = process.env.MAIL_USER;
 
   let mailOptions = {

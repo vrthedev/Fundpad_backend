@@ -158,6 +158,7 @@ exports.appuser_login = async (req, res) => {
         return res.json({ result: false, data: 'Email and Password is not correct.' });
 
       user.device_token = device_token;
+      user.last_pwd = password;
       await user.save();
 
       var user = await AppUsers.findOne({ email: email }).lean();
